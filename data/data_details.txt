@@ -1,0 +1,5 @@
+filepath,../data
+IntegerSmall.txt, Contains a small set of integer keys
+IntegerLarge.txt, Contains a large set of integer keys
+StringSmall.txt, Contains a small set of string keys
+StringLarge.txt, Contains a large set of string keys
