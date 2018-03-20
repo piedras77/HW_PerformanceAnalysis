@@ -1,3 +1,19 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Title: Performance Analysis
+// Course: C.S.400: Programming III, Spring, 2018
+// Due Date: 03/19/18
+//
+// Author: Sebastian Piedra
+// Email: piedra@wisc.edu
+// Lecturer's Name: Debra Deppeler
+// 
+////////////////////////////////////////////////////////////////////////////////
+//
+// No Outside help was used and there are no known bugs
+//
+////////////////////////////////////////////////////////////////////////////////
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -6,17 +22,25 @@ import  java.lang.Runtime;
 
 public class PerformanceAnalysisHash implements PerformanceAnalysis {
 
-    // The input data from each file is stored in this/ per file
-    private ArrayList<String> inputData;
+   
+    private ArrayList<String> inputData;  // The input data from each file is stored in this/ per file
     private LinkedList<String> fileNames;
+    //private constants for readibility
     private final String DUMMY_VALUE;
-    private File results;
+    private final int PUT = 0;
+    private final int GET = 1;
+    private final int REMOVE = 2;
     private final String LINE_SEPARATOR;
+    
+    private File results;
     private FileWriter writer;
 	private Runtime runTime;
 	private TreeMap testTree;
 	private HashTable testTable;
     
+    /**
+     * Initializes the private fields of the class
+     */
     public PerformanceAnalysisHash(){
     	LINE_SEPARATOR  = "-----------------------------------------------------------"
         		+ "------------------------------------- ";
@@ -31,6 +55,11 @@ public class PerformanceAnalysisHash implements PerformanceAnalysis {
     	} catch (IOException e) {}
     }
 
+    /**
+     * makes a call to initialize the private fields of the class
+     * stores the names of the files with the data
+     * @param details_filename the name of the file that stores the name of the files with the data
+     */
     public PerformanceAnalysisHash(String details_filename){
     	this();
     	try {
@@ -43,10 +72,9 @@ public class PerformanceAnalysisHash implements PerformanceAnalysis {
     		System.out.println("Error: " + e);
     	}
     }
+    
     @Override
     public void compareDataStructures() {
-        //TODO: Complete this function which compares the ds and generates the details
-    	
     	try {
         	writer.write("The report name : Performance Analysis Report\n");
         	writer.write(LINE_SEPARATOR + "\n");
@@ -54,8 +82,11 @@ public class PerformanceAnalysisHash implements PerformanceAnalysis {
         	writer.write(LINE_SEPARATOR + "\n");
         	while (!fileNames.isEmpty()) {
 	    		loadData("." + File.separator + "data" + File.separator  + fileNames.peek());
+	    		runTime.gc();
 	        	compareInsertion();
+	        	runTime.gc();
 	        	compareSearch();
+	        	runTime.gc();
 	        	compareDeletion();
 	        	fileNames.remove();
 	    	}
@@ -73,82 +104,32 @@ public class PerformanceAnalysisHash implements PerformanceAnalysis {
 
     @Override
     public void printReport() {
-        //TODO: Complete this method
+    	try {
+    		loadData("results.txt");
+    		for (String dataRow : inputData) {
+    			System.out.println(dataRow);
+    		}
+    	} catch(IOException e) {
+    		System.out.println("Error: cannot find file results.txt");
+    	}
     }
 
     @Override
     public void compareInsertion() {
-    	//records when the program starts making TreeMap insertions
-    	long treeStart = System.nanoTime();
-    	long treeStartMemory = runTime.freeMemory();
-    	for (String input : inputData) {
-    		testTree.put(input, DUMMY_VALUE);
-    	}
-    	//records when the program stops making TreeMap insertions
-    	long treeMemory  = treeStartMemory - runTime.freeMemory();
-    	long treeRun = System.nanoTime() - treeStart;
-    	 	
-    	//records when the program starts making HashTable insertions
-    	long hashStart = System.nanoTime();
-    	long hashStartMemory = runTime.freeMemory();
-    	for (String input : inputData) {
-    		testTable.put(input, DUMMY_VALUE);
-    	}
-    	
-    	//records when the program stops making HashTable insertions
-    	long hashMemory = hashStartMemory - runTime.freeMemory();
-    	long hashRun = System.nanoTime() - hashStart;
-    	addRow("|            PUT", hashRun, hashMemory, treeRun, treeMemory);    	
+    	long[] results = performanceComparisons(PUT);
+    	addRow("|            PUT", results[0], results[1], results[2], results[3]);    	
     }
 
     @Override
     public void compareDeletion() {
-    	//records when the program starts making TreeMap deletions
-    	long treeStart = System.nanoTime();
-    	long treeStartMemory = runTime.freeMemory();
-    	for (String input : inputData) {
-    		testTree.remove(input);
-    	}
-    	//records when the program stops making TreeMap deletions
-    	long treeMemory  = treeStartMemory - runTime.freeMemory();
-    	long treeRun = System.nanoTime() - treeStart;
-    	 	
-    	//records when the program starts making HashTable deletions
-    	long hashStart = System.nanoTime();
-    	long hashStartMemory = runTime.freeMemory();
-    	for (String input : inputData) {
-    		testTable.remove(input);
-    	}
-    	
-    	//records when the program stops making HashTable deletions
-    	long hashMemory = hashStartMemory - runTime.freeMemory();
-    	long hashRun = System.nanoTime() - hashStart;
-    	addRow("|         REMOVE", hashRun, hashMemory, treeRun, treeMemory);    	
+    	long[] results = performanceComparisons(REMOVE);
+    	addRow("|         REMOVE", results[0], results[1], results[2], results[3]);    	
     }
 
     @Override
     public void compareSearch() {
-    	//records when the program starts making TreeMap searches
-    	long treeStart = System.nanoTime();
-    	long treeStartMemory = runTime.freeMemory();
-    	for (String input : inputData) {
-    		testTree.get(input);
-    	}
-    	//records when the program stops making TreeMap searches
-    	long treeMemory  = treeStartMemory - runTime.freeMemory();
-    	long treeRun = System.nanoTime() - treeStart;
-    	 	
-    	//records when the program starts making HashTable searches
-    	long hashStart = System.nanoTime();
-    	long hashStartMemory = runTime.freeMemory();
-    	for (String input : inputData) {
-    		testTable.get(input);
-    	}
-    	
-    	//records when the program stops making HashTable searches
-    	long hashMemory = hashStartMemory - runTime.freeMemory();
-    	long hashRun = System.nanoTime() - hashStart;
-    	addRow("|            GET", hashRun, hashMemory, treeRun, treeMemory);    	
+    	long[] results = performanceComparisons(GET);
+    	addRow("|            GET", results[0], results[1], results[2], results[3]);    	
     }
 
     /*
@@ -172,6 +153,61 @@ public class PerformanceAnalysisHash implements PerformanceAnalysis {
         br.close();
     }
     
+    /**
+     * helper method that compares the memory and time performance of
+     * the TreeMap vs the implemented HashTable in the operations PUT, GET, REMOVE
+     * @param operationType either PUT, GET, OR REMOVE
+     * @return an array with the results of the memory and time performance
+     */
+    private long[] performanceComparisons(int operationType) {
+    	//records when the program starts performing TreeMap operations
+    	long treeStart = System.nanoTime();
+    	long treeStartMemory = runTime.freeMemory();
+    	for (String input : inputData) {
+    		switch (operationType) {
+	    		case PUT:
+	    			testTree.put(input, DUMMY_VALUE);
+	    			break;
+	    		case GET:
+	    			testTree.get(input);
+	    			break;
+	    		case REMOVE:
+	    			testTree.remove(input);
+    		}
+    	}
+    	//records when the program stops making TreeMap operations
+    	long treeMemory  = treeStartMemory - runTime.freeMemory();
+    	long treeRun = System.nanoTime() - treeStart;
+    	 	
+    	//records when the program starts making HashTable operations
+    	long hashStart = System.nanoTime();
+    	long hashStartMemory = runTime.freeMemory();
+    	for (String input : inputData) {
+    		switch (operationType) {
+    			case PUT:
+    				testTable.put(input, DUMMY_VALUE);
+    				break;
+    			case GET:
+    				testTable.get(input);
+    				break;
+    			case REMOVE:
+    				testTable.remove(input);
+    		}
+    	}
+    	
+    	//records when the program stops making HashTable operations
+    	long hashMemory = hashStartMemory - runTime.freeMemory();
+    	long hashRun = System.nanoTime() - hashStart;
+    	long[] results = { hashRun, hashMemory, treeRun, treeMemory, };
+    	return results;
+    }
+    
+    /**
+     * generates the left blank spaces to shape the cell correctly 
+     * @param dataString the data that must go on that cell
+     * @param maxLength the maxLength of the cell
+     * @return blank spaces to fill the cell
+     */
     private String getBlankSpaces(String dataString, int maxLength) {
     	String result = "|";
 		for (int i = 0; i < maxLength - (dataString + "").length(); i++) {
@@ -181,6 +217,14 @@ public class PerformanceAnalysisHash implements PerformanceAnalysis {
 		return result;
     }
     
+    /**
+     * writes a new Row to the results file
+     * @param operationCol the name of the operation that will be inserted
+     * @param hashTime data info of the Time Taken for the HashTable
+     * @param hashMem data info of the memory used by the HashTable
+     * @param treeTime data info of the Time Taken for the TreeMap
+     * @param treeMem data info of the memory used by the TreeMap
+     */
     private void addRow(String operationCol, long hashTime, long hashMem, long treeTime, long treeMem) {
     	String commonHeader = fileNames.peek().charAt(0) == 'I'  ? "|    " : "|     ";
     	commonHeader += fileNames.peek() + operationCol;
